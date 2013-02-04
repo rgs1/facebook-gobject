@@ -157,6 +157,7 @@ class FbPhoto(FbObject):
             comment['message'] = c['message']
             comment['created_time'] = c['created_time']
             comment['like_count'] = c['like_count']
+            comment['id'] = c['id']
             comments.append(comment)
 
         if len(comments) > 0:

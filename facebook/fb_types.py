@@ -30,8 +30,8 @@ FB_LIKE = 2
 FB_STATUS = 3
 
 FB_TYPES = {
-    FB_PHOTO: "photo",
-    FB_COMMENT: "comment",
-    FB_LIKE: "like",
-    FB_STATUS: "status",
+    FB_PHOTO: "Photo",
+    FB_COMMENT: "Comment",
+    FB_LIKE: "Like",
+    FB_STATUS: "Status",
 }

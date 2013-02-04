@@ -49,10 +49,11 @@ class FbObject(GObject.GObject):
 
         app_auth_params = [('access_token', FbAccount.access_token())]
 
+        states = []
         def f(*args):
             logging.debug('will call _http_progress_cb')
             try:
-                args = list(args) + [fb_type]
+                args = list(args) + [fb_type, post, states]
                 self._http_progress_cb(*args)
             except Exception as ex:
                 logging.debug("oops %s" % (str(ex)))
@@ -90,32 +91,46 @@ class FbObject(GObject.GObject):
         return result
 
     def _http_progress_cb(self, download_total, download_done,
-                          upload_total, upload_done, fb_type):
+                          upload_total, upload_done, fb_type, post, states):
         logging.debug('_http_progress_cb')
 
-        if download_total != 0:
-            total = download_total
-            done = download_done
-            transfer_type = fb_types.FB_TRANSFER_DOWNLOAD
-            transfer_str = "Download"
-        else:
+        if post:
             total = upload_total
             done = upload_done
             transfer_type = fb_types.FB_TRANSFER_UPLOAD
-            transfer_str = "Upload"
+            transfer_str = "upload"
+        else:
+            total = download_total
+            done = download_done
+            transfer_type = fb_types.FB_TRANSFER_DOWNLOAD
+            transfer_str = "download"
 
-        if done == 0:
+        if total == 0:
+            return
+
+        current_state = -1
+        if len(states) > 0:
+            current_state = states[-1]
+
+        if done == 0 and 0 not in states:
             self.emit('transfer-started', fb_type, transfer_type)
             state = "started"
-        elif done == total:
+            states.append(0)
+        elif done == total and 2 not in states:
             self.emit('transfer-completed', fb_type, transfer_type)
-            self.emit('transfer-state-changed', "%s completed" % (transfer_str))
             state = "completed"
+            states.append(2)
         else:
-            if total != 0:
+            if total != 0 and done != total:
+                perc = int((float(done) / float(total))*100)
+                state = "%d%% done" % (perc)
+                states.append(1)
                 self.emit('transfer-progress', fb_type, transfer_type,
                           float(done) / float(total))
-                perc = int((float(done) / float(total))*100)
-                state = "%d% done" % (perc)
 
-        self.emit('transfer-state-changed', "%s %s" % (transfer_str, state))
+        if current_state == states[-1]:
+            return
+
+        self.emit('transfer-state-changed',
+                  "%s %s %s" % \
+                      (fb_types.FB_TYPES[fb_type], transfer_str, state))

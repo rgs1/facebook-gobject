@@ -1,0 +1,3 @@
+facebook-gobject allows you access Facebook's Graph API via
+a set of GObject based objects for easy integration with
+your GLib2 based code.
